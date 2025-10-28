@@ -1,10 +1,10 @@
-# LoggingSSE
+# log-service
 
 A high-performance logging microservice built with Go that provides real-time log streaming via Server-Sent Events (SSE). Designed following Domain-Driven Design (DDD) principles with clean architecture patterns.
 
 ## Technical Overview
 
-**LoggingSSE** is a centralized logging service that enables applications to send structured log entries and receive real-time updates through SSE connections. The service implements DDD patterns with a clean separation of concerns across domain, application, and infrastructure layers.
+**log-service** is a centralized logging service that enables applications to send structured log entries and receive real-time updates through SSE connections. The service implements DDD patterns with a clean separation of concerns across domain, application, and infrastructure layers.
 
 ### Core Technologies
 
@@ -44,8 +44,8 @@ A high-performance logging microservice built with Go that provides real-time lo
 
 1. **Clone and prepare environment**
 ```bash
-git clone https://github.com/yourusername/LoggingSSE.git
-cd LoggingSSE
+git clone https://github.com/yourusername/.git
+cd 
 cp .env.example .env
 ```
 
@@ -79,8 +79,8 @@ docker-compose up -d
 
 **Application-only deployment:**
 ```bash
-docker build -t loggingsse .
-docker run -p 8080:8080 --env-file .env loggingsse
+docker build -t  .
+docker run -p 8080:8080 --env-file .env 
 ```
 
 ## Usage Examples
