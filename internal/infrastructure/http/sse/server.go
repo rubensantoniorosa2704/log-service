@@ -3,7 +3,6 @@ package sse
 import (
 	"log"
 	"net/http"
-	"strings"
 
 	r3sse "github.com/r3labs/sse/v2"
 )
@@ -14,23 +13,26 @@ type Server struct {
 
 func NewServer() *Server {
 	s := r3sse.New()
-	// Server configs stay here
-	// Example: s.Headers = map[string]string{"Access-Control-Allow-Origin": "*"}
+	// Configure CORS headers for SSE
+	s.Headers = map[string]string{
+		"Access-Control-Allow-Origin":  "*",
+		"Access-Control-Allow-Methods": "GET, OPTIONS",
+		"Access-Control-Allow-Headers": "Accept, Authorization, Content-Type, X-CSRF-Token, X-API-Key",
+		"Cache-Control":                "no-cache",
+		"Connection":                   "keep-alive",
+	}
 	return &Server{server: s}
 }
 
 func (s *Server) HTTPHandler(w http.ResponseWriter, r *http.Request) {
-	streamName := strings.TrimPrefix(r.URL.Path, "/events/")
+	streamName := r.URL.Query().Get("stream")
 	if streamName == "" {
-		http.Error(w, "Channel name (e.g., /events/app-id) is required.", http.StatusBadRequest)
+		http.Error(w, "Application ID (stream) query parameter is required.", http.StatusBadRequest)
 		return
 	}
 
-	q := r.URL.Query()
-	q.Set("stream", streamName)
-	r.URL.RawQuery = q.Encode()
-
-	log.Printf("New client connected to SSE channel: %s", streamName)
+	s.server.CreateStream(streamName)
+	log.Printf("New client connected to SSE channel (ApplicationID): %s", streamName)
 	s.server.ServeHTTP(w, r)
 }
 
