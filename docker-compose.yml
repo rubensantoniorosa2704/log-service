@@ -1,0 +1,47 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: loggingsse-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_INITDB_DATABASE: loggingdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: loggingsse-app
+    restart: always
+    ports:
+      - "${APP_PORT}:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - PORT=${PORT}
+    volumes:
+      - ./web:/app/web:ro  # Mount web files for serving static content
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"] 
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mongo-data:
+    driver: local
