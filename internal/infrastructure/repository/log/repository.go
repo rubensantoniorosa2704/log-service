@@ -3,13 +3,14 @@ package log
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/rubensantoniorosa2704/LoggingSSE/internal/domain/log"
+	domainLog "github.com/rubensantoniorosa2704/LoggingSSE/internal/domain/log"
 )
 
 const LogsCollection = "logs"
@@ -72,11 +73,11 @@ func ensureIndexes(collection *mongo.Collection) {
 
 	if _, err := collection.Indexes().CreateMany(ctx, indexes); err != nil {
 		// Log error but don't fail - the repository can still function without indexes
-		fmt.Printf("Warning: failed to create indexes: %v\n", err)
+		log.Printf("Warning: failed to create MongoDB indexes: %v", err)
 	}
 }
 
-func (r *LogRepository) Create(ctx context.Context, l *log.Log) error {
+func (r *LogRepository) Create(ctx context.Context, l *domainLog.Log) error {
 	_, err := r.collection.InsertOne(ctx, l)
 
 	if err != nil {
