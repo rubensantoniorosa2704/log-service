@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/rubensantoniorosa2704/LoggingSSE/internal/application/log/dto"
-	"github.com/rubensantoniorosa2704/LoggingSSE/internal/domain/log"
+	domainLog "github.com/rubensantoniorosa2704/LoggingSSE/internal/domain/log"
 )
 
 type LogUsecaseInterface interface {
@@ -20,12 +21,12 @@ type SSEPublisher interface {
 }
 
 type LogUsecase struct {
-	repo   log.LogRepository
+	repo   domainLog.LogRepository
 	sseSrv SSEPublisher
 }
 
 // NewLogUsecase creates a new LogUsecase. Optionally pass an SSE server for real-time notifications.
-func NewLogUsecase(repo log.LogRepository, sseSrv SSEPublisher) *LogUsecase {
+func NewLogUsecase(repo domainLog.LogRepository, sseSrv SSEPublisher) *LogUsecase {
 	return &LogUsecase{repo: repo, sseSrv: sseSrv}
 }
 
@@ -45,8 +46,12 @@ func (uc *LogUsecase) CreateLog(ctx context.Context, input dto.CreateLogInput) (
 	if uc.sseSrv != nil {
 		channel := newLog.ApplicationID.String()
 		if uc.sseSrv.StreamExists(channel) {
-			payload, _ := json.Marshal(dto.LogToLogOutput(newLog))
-			uc.sseSrv.Publish(channel, payload)
+			payload, err := json.Marshal(dto.LogToLogOutput(newLog))
+			if err != nil {
+				log.Printf("Warning: failed to marshal log for SSE: %v", err)
+			} else {
+				uc.sseSrv.Publish(channel, payload)
+			}
 		}
 	}
 

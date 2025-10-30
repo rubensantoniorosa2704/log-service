@@ -31,8 +31,12 @@ func (s *Server) HTTPHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.server.CreateStream(streamName)
-	log.Printf("New client connected to SSE channel (ApplicationID): %s", streamName)
+	// Only create stream if it doesn't exist to avoid redundant operations
+	if !s.server.StreamExists(streamName) {
+		s.server.CreateStream(streamName)
+		log.Printf("New SSE channel created (ApplicationID): %s", streamName)
+	}
+	log.Printf("Client connected to SSE channel (ApplicationID): %s", streamName)
 	s.server.ServeHTTP(w, r)
 }
 
