@@ -15,7 +15,13 @@ func Connect(uri string) (*mongo.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	clientOptions := options.Client().ApplyURI(uri)
+	// Configure connection pool for optimal performance
+	clientOptions := options.Client().
+		ApplyURI(uri).
+		SetMaxPoolSize(100).        // Maximum number of connections in the pool
+		SetMinPoolSize(10).          // Minimum number of connections in the pool
+		SetMaxConnIdleTime(60 * time.Second). // Close idle connections after 60 seconds
+		SetServerSelectionTimeout(5 * time.Second) // Timeout for server selection
 
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {

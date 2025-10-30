@@ -17,6 +17,16 @@ const (
 	LogLevelFatal LogLevel = "FATAL"
 )
 
+// validLogLevelsMap is a pre-computed map for O(1) validation lookups
+var validLogLevelsMap = map[LogLevel]bool{
+	LogLevelTrace: true,
+	LogLevelDebug: true,
+	LogLevelInfo:  true,
+	LogLevelWarn:  true,
+	LogLevelError: true,
+	LogLevelFatal: true,
+}
+
 // ValidLogLevels returns all valid log levels
 func ValidLogLevels() []LogLevel {
 	return []LogLevel{
@@ -40,14 +50,9 @@ func NewLogLevel(level string) (LogLevel, error) {
 	return normalized, nil
 }
 
-// IsValid checks if the log level is valid
+// IsValid checks if the log level is valid using O(1) map lookup
 func (l LogLevel) IsValid() bool {
-	for _, valid := range ValidLogLevels() {
-		if l == valid {
-			return true
-		}
-	}
-	return false
+	return validLogLevelsMap[l]
 }
 
 // String returns the string representation of the log level

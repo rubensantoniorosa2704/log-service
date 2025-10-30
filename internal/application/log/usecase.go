@@ -45,8 +45,14 @@ func (uc *LogUsecase) CreateLog(ctx context.Context, input dto.CreateLogInput) (
 	if uc.sseSrv != nil {
 		channel := newLog.ApplicationID.String()
 		if uc.sseSrv.StreamExists(channel) {
-			payload, _ := json.Marshal(dto.LogToLogOutput(newLog))
-			uc.sseSrv.Publish(channel, payload)
+			payload, err := json.Marshal(dto.LogToLogOutput(newLog))
+			if err != nil {
+				// Log the error but don't fail the entire operation
+				// The log was successfully saved to the database
+				fmt.Printf("Warning: failed to marshal log for SSE: %v\n", err)
+			} else {
+				uc.sseSrv.Publish(channel, payload)
+			}
 		}
 	}
 
