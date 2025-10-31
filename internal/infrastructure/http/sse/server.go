@@ -12,31 +12,30 @@ type Server struct {
 }
 
 func NewServer() *Server {
-	s := r3sse.New()
-	// Configure CORS headers for SSE
-	s.Headers = map[string]string{
-		"Access-Control-Allow-Origin":  "*",
-		"Access-Control-Allow-Methods": "GET, OPTIONS",
-		"Access-Control-Allow-Headers": "Accept, Authorization, Content-Type, X-CSRF-Token, X-API-Key",
-		"Cache-Control":                "no-cache",
-		"Connection":                   "keep-alive",
-	}
-	return &Server{server: s}
+	return &Server{server: r3sse.New()}
 }
 
-func (s *Server) HTTPHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	streamName := r.URL.Query().Get("stream")
 	if streamName == "" {
-		http.Error(w, "Application ID (stream) query parameter is required.", http.StatusBadRequest)
+		http.Error(w, "missing 'stream' query parameter", http.StatusBadRequest)
 		return
 	}
 
 	// Only create stream if it doesn't exist to avoid redundant operations
 	if !s.server.StreamExists(streamName) {
 		s.server.CreateStream(streamName)
-		log.Printf("New SSE channel created (ApplicationID): %s", streamName)
+		log.Printf("[SSE] Channel=%s event=created", streamName)
 	}
-	log.Printf("Client connected to SSE channel (ApplicationID): %s", streamName)
+
+	log.Printf("[SSE] Channel=%s event=client_connected", streamName)
+
+	go func() {
+		<-ctx.Done()
+		log.Printf("[SSE] Channel=%s event=client_disconnected", streamName)
+	}()
+
 	s.server.ServeHTTP(w, r)
 }
 
