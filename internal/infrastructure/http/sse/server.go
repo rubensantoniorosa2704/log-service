@@ -24,7 +24,7 @@ func NewServer() *Server {
 	return &Server{server: s}
 }
 
-func (s *Server) HTTPHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	streamName := r.URL.Query().Get("stream")
 	if streamName == "" {
 		http.Error(w, "Application ID (stream) query parameter is required.", http.StatusBadRequest)

@@ -21,9 +21,7 @@ const (
 
 type RouterConfig struct {
 	LogController *logCtrl.LogController
-	SSEServer     interface {
-		HTTPHandler(http.ResponseWriter, *http.Request)
-	}
+	SSEServer     http.Handler
 }
 
 func RegisterRoutes(cfg RouterConfig) http.Handler {
@@ -66,7 +64,7 @@ func registerLogRoutes(r chi.Router, cfg RouterConfig) {
 	r.Options(LogsEndpoint, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	r.Get(EventsEndpoint, sseHandler(http.HandlerFunc(cfg.SSEServer.HTTPHandler)))
+	r.Get(EventsEndpoint, sseHandler(http.HandlerFunc(cfg.SSEServer.ServeHTTP)))
 }
 
 func sseHandler(sse http.Handler) http.HandlerFunc {
