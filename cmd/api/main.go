@@ -15,11 +15,11 @@ import (
 	"github.com/joho/godotenv"
 	applicationLog "github.com/rubensantoniorosa2704/LoggingSSE/internal/application/log"
 	domainLog "github.com/rubensantoniorosa2704/LoggingSSE/internal/domain/log"
-	"github.com/rubensantoniorosa2704/LoggingSSE/internal/infrastructure/db/mongodb"
 	httpRoutes "github.com/rubensantoniorosa2704/LoggingSSE/internal/infrastructure/http"
 	httpControllersLog "github.com/rubensantoniorosa2704/LoggingSSE/internal/infrastructure/http/controller/log"
 	sse "github.com/rubensantoniorosa2704/LoggingSSE/internal/infrastructure/http/sse"
 	repoLog "github.com/rubensantoniorosa2704/LoggingSSE/internal/infrastructure/repository/log"
+	"github.com/rubensantoniorosa2704/LoggingSSE/pkg/mongodb"
 )
 
 const defaultPort = "8080"
@@ -38,15 +38,19 @@ func main() {
 	}
 
 	// Connect to MongoDB
-	mongoClient, err := mongodb.Connect(mongoURI)
+	mongoClient, err := mongodb.ConnectSimple(mongoURI)
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
-	defer mongodb.Disconnect(mongoClient)
+	defer func() {
+		if err := mongoClient.Disconnect(); err != nil {
+			log.Printf("Error disconnecting from MongoDB: %v", err)
+		}
+	}()
 
-	fmt.Println("MongoDB connection successful.")
+	log.Println("MongoDB connection successful.")
 	// Initialize repository, usecase, and controller with dependency injection
-	var logRepo domainLog.LogRepository = repoLog.NewLogRepository(mongoClient, dbName)
+	var logRepo domainLog.LogRepository = repoLog.NewLogRepository(mongoClient.Client, dbName)
 	sseServer := sse.NewServer()
 	logUsecase := applicationLog.NewLogUsecase(logRepo, sseServer)
 
