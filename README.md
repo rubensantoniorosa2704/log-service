@@ -44,7 +44,7 @@ A high-performance logging microservice built with Go that provides real-time lo
 
 1. **Clone and prepare environment**
 ```bash
-git clone https://github.com/yourusername/.git
+git clone https://github.com/rubensantoniorosa2704/log-service.git
 cd 
 cp .env.example .env
 ```
