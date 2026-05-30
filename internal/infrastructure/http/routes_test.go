@@ -19,10 +19,10 @@ func (s *stubLogUsecase) CreateLog(_ context.Context, _ dto.CreateLogInput) (*dt
 }
 
 // stubSSEServer simulates the real SSE server: it sets Cache-Control: no-cache
-// (as the r3labs library does) before writing the response.
+// before writing the response, matching the native SSE implementation.
 type stubSSEServer struct{}
 
-func (s *stubSSEServer) HTTPHandler(w http.ResponseWriter, _ *http.Request) {
+func (s *stubSSEServer) Subscribe(w http.ResponseWriter, _ *http.Request, _ string) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(http.StatusOK)
 }
@@ -116,7 +116,7 @@ func TestSecurityHeaders_SSEExclusion(t *testing.T) {
 	t.Parallel()
 
 	router := newTestRouter()
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/events/app-123?stream=app-123", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/events/app-123", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -132,7 +132,7 @@ func TestSecurityHeaders_SSEHasOtherHeaders(t *testing.T) {
 	t.Parallel()
 
 	router := newTestRouter()
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/events/app-123?stream=app-123", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/events/app-123", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -153,7 +153,7 @@ func TestCORS_SingleSource(t *testing.T) {
 		method, path string
 	}{
 		{http.MethodPost, "/api/v1/logs"},
-		{http.MethodGet, "/api/v1/events/app-123?stream=app-123"},
+		{http.MethodGet, "/api/v1/events/app-123"},
 	}
 
 	for _, tc := range routes {
@@ -179,7 +179,7 @@ func TestCORS_NoDuplication(t *testing.T) {
 	t.Parallel()
 
 	router := newTestRouter()
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/events/app-123?stream=app-123", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/events/app-123", nil)
 	req.Header.Set("Origin", "http://example.com")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
