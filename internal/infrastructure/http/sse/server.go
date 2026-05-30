@@ -13,14 +13,6 @@ type Server struct {
 
 func NewServer() *Server {
 	s := r3sse.New()
-	// Configure CORS headers for SSE
-	s.Headers = map[string]string{
-		"Access-Control-Allow-Origin":  "*",
-		"Access-Control-Allow-Methods": "GET, OPTIONS",
-		"Access-Control-Allow-Headers": "Accept, Authorization, Content-Type, X-CSRF-Token, X-API-Key",
-		"Cache-Control":                "no-cache",
-		"Connection":                   "keep-alive",
-	}
 	return &Server{server: s}
 }
 

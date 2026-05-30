@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	logCtrl "github.com/rubensantoniorosa2704/LoggingSSE/internal/infrastructure/http/controller/log"
+	"github.com/rubensantoniorosa2704/LoggingSSE/internal/infrastructure/http/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -29,8 +30,9 @@ func RegisterRoutes(cfg RouterConfig) http.Handler {
 		MaxAge:           300,
 	}))
 
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(middleware.SecurityHeaders)
+	r.Use(chimiddleware.Logger)
+	r.Use(chimiddleware.Recoverer)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		// Log routes
