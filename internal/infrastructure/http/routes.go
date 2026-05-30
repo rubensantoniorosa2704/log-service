@@ -14,7 +14,7 @@ import (
 type RouterConfig struct {
 	LogController *logCtrl.LogController
 	SSEServer     interface {
-		HTTPHandler(http.ResponseWriter, *http.Request)
+		Subscribe(w http.ResponseWriter, r *http.Request, applicationID string)
 	}
 }
 
@@ -35,22 +35,14 @@ func RegisterRoutes(cfg RouterConfig) http.Handler {
 	r.Use(chimiddleware.Recoverer)
 
 	r.Route("/api/v1", func(r chi.Router) {
-		// Log routes
 		r.Post("/logs", cfg.LogController.CreateLogHandler)
 
-		// OPTIONS for CORS preflight
 		r.Options("/logs", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		})
 
-		// SSE route for log events by applicationID
-		r.Get("/events/{applicationID}", func(w http.ResponseWriter, req *http.Request) {
-			applicationID := chi.URLParam(req, "applicationID")
-			// Pass as ?stream=applicationID for the SSE lib
-			q := req.URL.Query()
-			q.Set("stream", applicationID)
-			req.URL.RawQuery = q.Encode()
-			cfg.SSEServer.HTTPHandler(w, req)
+		r.Get("/events/{applicationID}", func(w http.ResponseWriter, r *http.Request) {
+			cfg.SSEServer.Subscribe(w, r, chi.URLParam(r, "applicationID"))
 		})
 	})
 

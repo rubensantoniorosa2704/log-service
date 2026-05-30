@@ -27,6 +27,11 @@ go.work.sum
 # env file
 .env
 
+# Generated Swagger files
+docs/swagger.json
+docs/swagger.yaml
+docs/docs.go
+
 # Editor/IDE
 # .idea/
 # .vscode/
