@@ -1,35 +1,21 @@
-# Build stage
 FROM golang:1.25.3-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache git
-
-# Copy go mod files first for better caching
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+
 COPY . .
+RUN swag init -g ./cmd/api/main.go -o ./docs
+RUN CGO_ENABLED=0 GOOS=linux go build -o app ./cmd/api
 
-# Build the application from the correct path
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app ./cmd/api
+FROM scratch
 
-# Final stage
-FROM alpine:latest
-
-# Install curl for healthcheck and ca-certificates for HTTPS
-RUN apk --no-cache add ca-certificates curl
-
-WORKDIR /root/
-
-# Copy the binary from builder stage
-COPY --from=builder /app/app .
-
-# Copy docs if they exist
+COPY --from=builder /app/app /app
 COPY --from=builder /app/docs ./docs
 
 EXPOSE 8080
 
-CMD ["./app"]
+CMD ["/app"]
